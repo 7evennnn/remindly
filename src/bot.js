@@ -4,6 +4,18 @@ import { getNextFireDate } from './recurrence.js';
 const TOKEN = process.env.TG_BOT_TOKEN;
 const BASE = `https://api.telegram.org/bot${TOKEN}`;
 
+
+async function logEvent(chatId, event, data = {}) {
+  try {
+    await db.query(
+      `INSERT INTO analytics (chat_id, event, data) VALUES ($1, $2, $3)`,
+      [String(chatId), event, JSON.stringify(data)]
+    );
+  } catch (e) {
+    console.error('Analytics log failed:', e.message);
+  }
+}
+
 // ── API helpers ──────────────────────────────────────────────────
 
 async function api(method, body = {}) {
@@ -57,6 +69,7 @@ const convo = new Map();
 // ── Commands ─────────────────────────────────────────────────────
 
 async function handleStart(chatId) {
+    await logEvent(chatId, 'start');
   await db.query(
     `INSERT INTO users (chat_id) VALUES ($1) ON CONFLICT (chat_id) DO NOTHING`,
     [String(chatId)]
@@ -69,6 +82,7 @@ async function handleStart(chatId) {
 }
 
 async function handleAdd(chatId) {
+    await logEvent(chatId, 'add_task_started');
   convo.set(chatId, { step: 'name' });
   await sendMessage(chatId, `What's the task name?\n\n_e.g. "Send invoice to client"_`);
 }
@@ -188,6 +202,8 @@ async function saveTask(chatId, name, recurrence) {
     `INSERT INTO tasks (user_id, name, recurrence, next_fire) VALUES ($1, $2, $3, $4)`,
     [rows[0].id, name, JSON.stringify(recurrence), nextFire]
   );
+
+  await logEvent(chatId, 'task_created', { name, type: recurrence.type });
 }
 
 // ── Callback query handler (button taps) ────────────────────────
