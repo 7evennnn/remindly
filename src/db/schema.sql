@@ -29,3 +29,11 @@ CREATE TABLE instances (
   created_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(task_id, fire_date)
 );
+
+CREATE TABLE analytics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  chat_id TEXT,
+  event TEXT,
+  data JSONB,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
