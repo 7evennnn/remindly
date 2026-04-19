@@ -4,7 +4,7 @@ import { sendReminder, sendNudge } from './bot.js';
 import { getNextFireDate } from './recurrence.js';
 
 // Midnight: create today's instances for due tasks
-cron.schedule('0 0 * * *', async () => {
+cron.schedule('0 23 * * *', async () => {
   const { rows: tasks } = await db.query(`
     SELECT * FROM tasks WHERE active = true AND next_fire = CURRENT_DATE
   `);
